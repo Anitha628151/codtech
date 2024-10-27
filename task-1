@@ -1,0 +1,228 @@
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Random;
+import java.util.Scanner;
+
+// Question class
+class Question {
+    private String questionText;
+    private String[] options;
+    private int correctOption;
+
+    public Question(String questionText, String[] options, int correctOption) {
+        this.questionText = questionText;
+        this.options = options;
+        this.correctOption = correctOption;
+    }
+
+    public String getQuestionText() {
+        return questionText;
+    }
+
+    public String[] getOptions() {
+        return options;
+    }
+
+    public int getCorrectOption() {
+        return correctOption;
+    }
+}
+
+// Exam class
+class Exam {
+    private String examTitle;
+    private List<Question> questions;
+
+    public Exam(String examTitle) {
+        this.examTitle = examTitle;
+        this.questions = new ArrayList<>();
+    }
+
+    public void addQuestion(Question question) {
+        questions.add(question);
+    }
+
+    public List<Question> getQuestions() {
+        return questions;
+    }
+
+    public String getExamTitle() {
+        return examTitle;
+    }
+}
+
+// Result class
+class Result {
+    private String studentName;
+    private int totalQuestions;
+    private int correctAnswers;
+
+    public Result(String studentName, int totalQuestions, int correctAnswers) {
+        this.studentName = studentName;
+        this.totalQuestions = totalQuestions;
+        this.correctAnswers = correctAnswers;
+    }
+
+    public void displayResult() {
+        System.out.println("Student: " + studentName);
+        System.out.println("Total Questions: " + totalQuestions);
+        System.out.println("Correct Answers: " + correctAnswers);
+        System.out.println("Score: " + (correctAnswers * 100 / totalQuestions) + "%");
+    }
+}
+
+// User Authentication Class
+class User {
+    private String username;
+    private String password;
+
+    public User(String username, String password) {
+        this.username = username;
+        this.password = password;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public boolean authenticate(String password) {
+        return this.password.equals(password);
+    }
+}
+
+// Admin class to manage exams
+class Admin {
+    private List<Exam> exams;
+
+    public Admin() {
+        exams = new ArrayList<>();
+    }
+
+    public void createExam(String title) {
+        Exam exam = new Exam(title);
+        exams.add(exam);
+        System.out.println("Exam created: " + title);
+    }
+
+    public void addQuestionToExam(String title, Question question) {
+        for (Exam exam : exams) {
+            if (exam.getExamTitle().equals(title)) {
+                exam.addQuestion(question);
+                System.out.println("Question added to exam: " + title);
+                return;
+            }
+        }
+        System.out.println("Exam not found.");
+    }
+
+    public List<Exam> getExams() {
+        return exams;
+    }
+}
+
+// Student class to take the exam
+class Student {
+    private String name;
+    private User user;
+
+    public Student(String name, String username, String password) {
+        this.name = name;
+        this.user = new User(username, password);
+    }
+
+    public boolean login(String username, String password) {
+        return user.getUsername().equals(username) && user.authenticate(password);
+    }
+
+    public Result takeExam(Exam exam) {
+        Scanner sc = new Scanner(System.in);
+        int correctAnswers = 0;
+        List<Question> questions = new ArrayList<>(exam.getQuestions()); // Copy to avoid modifying original list
+        Random random = new Random();
+
+        System.out.println("Starting exam: " + exam.getExamTitle());
+        for (int i = 0; i < questions.size(); i++) {
+            Question question = questions.get(i);
+            System.out.println("Q" + (i + 1) + ": " + question.getQuestionText());
+            String[] options = question.getOptions();
+            for (int j = 0; j < options.length; j++) {
+                System.out.println((j + 1) + ". " + options[j]);
+            }
+
+            System.out.print("Your answer: ");
+            while (!sc.hasNextInt()) {  // Ensures input is an integer
+                System.out.println("Please enter a valid option number.");
+                sc.next();  // Discard non-integer input
+            }
+            int answer = sc.nextInt();
+            if (answer == question.getCorrectOption()) {
+                correctAnswers++;
+            }
+        }
+
+        Result result = new Result(name, questions.size(), correctAnswers);
+        return result;
+    }
+}
+
+// Main class
+public class OnlineExaminationSystem {
+    private static HashMap<String, Student> students = new HashMap<>();
+    private static Admin admin = new Admin();
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        // Admin creates an exam
+        admin.createExam("Java Programming");
+
+        // Admin adds questions to the exam
+        admin.addQuestionToExam("Java Programming", new Question("What is Java?", new String[]{"Language", "Animal", "Food", "Car"}, 1));
+        admin.addQuestionToExam("Java Programming", new Question("Which company developed Java?", new String[]{"Microsoft", "Apple", "Sun Microsystems", "Google"}, 3));
+        admin.addQuestionToExam("Java Programming", new Question("Java is platform-independent?", new String[]{"True", "False"}, 1));
+
+        // Register students
+        students.put("student1", new Student("Alice", "student1", "password1"));
+        students.put("student2", new Student("Bob", "student2", "password2"));
+
+        // Student login
+        System.out.print("Enter username: ");
+        String username = sc.next();
+        System.out.print("Enter password: ");
+        String password = sc.next();
+
+        Student student = students.get(username);
+        if (student != null && student.login(username, password)) {
+            System.out.println("Login successful!");
+
+            // Student selects an exam
+            System.out.println("Select exam: ");
+            List<Exam> exams = admin.getExams();
+            for (int i = 0; i < exams.size(); i++) {
+                System.out.println((i + 1) + ". " + exams.get(i).getExamTitle());
+            }
+
+            int examChoice = -1;
+            while (examChoice < 1 || examChoice > exams.size()) {
+                System.out.print("Enter exam number: ");
+                if (sc.hasNextInt()) {
+                    examChoice = sc.nextInt();
+                } else {
+                    sc.next();  // Discard invalid input
+                    System.out.println("Invalid input. Please enter a number.");
+                }
+            }
+            Exam selectedExam = exams.get(examChoice - 1);
+
+            // Display result after taking the exam
+            Result result = student.takeExam(selectedExam);
+            result.displayResult();
+        } else {
+            System.out.println("Invalid username or password.");
+        }
+
+        // Avoid closing System.in prematurely
+        // sc.close();
+    }
+}
