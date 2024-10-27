@@ -1,0 +1,241 @@
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+// Room class
+class Room {
+    private int roomNumber;
+    private String type; // e.g., Single, Double, Suite
+    private boolean isAvailable;
+    private double price;
+
+    public Room(int roomNumber, String type, double price) {
+        this.roomNumber = roomNumber;
+        this.type = type;
+        this.price = price;
+        this.isAvailable = true; // default to available
+    }
+
+    // Getters and Setters
+    public int getRoomNumber() {
+        return roomNumber;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public boolean isAvailable() {
+        return isAvailable;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setAvailable(boolean available) {
+        isAvailable = available;
+    }
+
+    @Override
+    public String toString() {
+        return "Room{" +
+                "roomNumber=" + roomNumber +
+                ", type='" + type + '\'' +
+                ", isAvailable=" + isAvailable +
+                ", price=" + price +
+                '}';
+    }
+}
+
+// Guest class
+class Guest {
+    private int guestId;
+    private String name;
+    private String email;
+    private String phone;
+
+    public Guest(int guestId, String name, String email, String phone) {
+        this.guestId = guestId;
+        this.name = name;
+        this.email = email;
+        this.phone = phone;
+    }
+
+    // Getters and Setters
+    public int getGuestId() {
+        return guestId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    @Override
+    public String toString() {
+        return "Guest{" +
+                "guestId=" + guestId +
+                ", name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                ", phone='" + phone + '\'' +
+                '}';
+    }
+}
+
+// Booking class
+class Booking {
+    private int bookingId;
+    private Guest guest;
+    private Room room;
+    private Date startDate;
+    private Date endDate;
+
+    public Booking(int bookingId, Guest guest, Room room, Date startDate, Date endDate) {
+        this.bookingId = bookingId;
+        this.guest = guest;
+        this.room = room;
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
+
+    // Getters and Setters
+    public int getBookingId() {
+        return bookingId;
+    }
+
+    public Guest getGuest() {
+        return guest;
+    }
+
+    public Room getRoom() {
+        return room;
+    }
+
+    public Date getStartDate() {
+        return startDate;
+    }
+
+    public Date getEndDate() {
+        return endDate;
+    }
+
+    @Override
+    public String toString() {
+        return "Booking{" +
+                "bookingId=" + bookingId +
+                ", guest=" + guest +
+                ", room=" + room +
+                ", startDate=" + startDate +
+                ", endDate=" + endDate +
+                '}';
+    }
+}
+
+// Hotel Management class
+class HotelManagement {
+    public List<Room> rooms; // Changed to public
+    public List<Guest> guests; // Changed to public
+    private List<Booking> bookings;
+
+    public HotelManagement() {
+        rooms = new ArrayList<>();
+        guests = new ArrayList<>();
+        bookings = new ArrayList<>();
+    }
+
+    public void addRoom(Room room) {
+        rooms.add(room);
+    }
+
+    public void updateRoom(int roomNumber, Room updatedRoom) {
+        for (int i = 0; i < rooms.size(); i++) {
+            if (rooms.get(i).getRoomNumber() == roomNumber) {
+                rooms.set(i, updatedRoom);
+                return;
+            }
+        }
+    }
+
+    public void deleteRoom(int roomNumber) {
+        rooms.removeIf(room -> room.getRoomNumber() == roomNumber);
+    }
+
+    public void addGuest(Guest guest) {
+        guests.add(guest);
+    }
+
+    public void updateGuest(int guestId, Guest updatedGuest) {
+        for (int i = 0; i < guests.size(); i++) {
+            if (guests.get(i).getGuestId() == guestId) {
+                guests.set(i, updatedGuest);
+                return;
+            }
+        }
+    }
+
+    public void deleteGuest(int guestId) {
+        guests.removeIf(guest -> guest.getGuestId() == guestId);
+    }
+
+    public boolean isRoomAvailable(Room room, Date startDate, Date endDate) {
+        for (Booking booking : bookings) {
+            if (booking.getRoom().getRoomNumber() == room.getRoomNumber()) {
+                // Check if the room is booked in the specified date range
+                if ((startDate.before(booking.getEndDate()) && endDate.after(booking.getStartDate()))) {
+                    return false; // Room is not available
+                }
+            }
+        }
+        return true; // Room is available
+    }
+
+    public void bookRoom(Guest guest, Room room, Date startDate, Date endDate) {
+        if (isRoomAvailable(room, startDate, endDate)) {
+            room.setAvailable(false);
+            Booking booking = new Booking(bookings.size() + 1, guest, room, startDate, endDate);
+            bookings.add(booking);
+            System.out.println("Room booked successfully: " + booking);
+        } else {
+            System.out.println("Room not available for the selected dates.");
+        }
+    }
+
+    public void printBookings() {
+        for (Booking booking : bookings) {
+            System.out.println(booking);
+        }
+    }
+}
+
+// Main class to run the application
+public class HotelBookingSystem {
+    public static void main(String[] args) {
+        HotelManagement hotelManagement = new HotelManagement();
+
+        // Adding rooms
+        hotelManagement.addRoom(new Room(101, "Single", 100.0));
+        hotelManagement.addRoom(new Room(102, "Double", 150.0));
+        hotelManagement.addRoom(new Room(201, "Suite", 250.0));
+
+        // Adding guests
+        hotelManagement.addGuest(new Guest(1, "John Doe", "john@example.com", "1234567890"));
+        hotelManagement.addGuest(new Guest(2, "Jane Smith", "jane@example.com", "0987654321"));
+
+        // Booking rooms
+        Date now = new Date(); // Current date
+        Date futureDate = new Date(now.getTime() + (1000 * 60 * 60 * 24)); // Tomorrow's date
+        hotelManagement.bookRoom(hotelManagement.guests.get(0), hotelManagement.rooms.get(0), now, futureDate);
+        hotelManagement.bookRoom(hotelManagement.guests.get(1), hotelManagement.rooms.get(1), now, futureDate);
+
+        // Print all bookings
+        hotelManagement.printBookings();
+    }
+}
